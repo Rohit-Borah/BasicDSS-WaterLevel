@@ -11,6 +11,13 @@ import Point from "ol/geom/Point";
 import { Icon, Style } from "ol/style";
 import Overlay from "ol/Overlay";
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//import ReactDOM from "react-dom"; OLD
+import { createRoot } from "react-dom/client";
+import HydroGraph from "./HydroGraph";
+
+
 const iconStyle = new Style({
   image: new Icon({
     //src: "https://cdn.jsdelivr.net/npm/ol@latest/examples/data/icon.png",
@@ -65,20 +72,44 @@ export default function WaterLevelMap() {
         const geom = feature.getGeometry();
         const coord = geom.getCoordinates();
         const p = props._popupProps;
-        contentRef.current.innerHTML = `
-          <div style="font-family: system-ui; font-size: 14px; line-height:1.2">
-            <div style="font-weight:700; margin-bottom:4px">${p.station} (${p.river})</div>
-            <div><b>Warning:</b> ${p.warning_level ?? "-"} m</div>
-            <div><b>Danger:</b> ${p.danger_level ?? "-"} m</div>
-            <div><b>HFL:</b> ${p.hfl_m ?? "-"} m</div>
-            <div><b>Water @ ${p.time_label}:</b> ${p.water_level_m ?? "-"} m</div>
-            <div><b>Trend:</b> ${p.trend ?? "-"}</div>
-            <div style="margin-top:4px; color:#666">${p.district || ""}</div>
-          </div>`;
-        overlay.setPosition(coord);
-      }
-    });
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------        
+    //     contentRef.current.innerHTML = `
+    //       <div style="font-family: system-ui; font-size: 14px; line-height:1.2">
+    //         <div style="font-weight:700; margin-bottom:4px">${p.station} (${p.river})</div>
+    //         <div><b>Warning:</b> ${p.warning_level ?? "-"} m</div>
+    //         <div><b>Danger:</b> ${p.danger_level ?? "-"} m</div>
+    //         <div><b>HFL:</b> ${p.hfl_m ?? "-"} m</div>
+    //         <div><b>Water @ ${p.time_label}:</b> ${p.water_level_m ?? "-"} m</div>
+    //         <div><b>Trend:</b> ${p.trend ?? "-"}</div>
+    //         <div style="margin-top:4px; color:#666">${p.district || ""}</div>
+    //       </div>`;
+    //     overlay.setPosition(coord);
+    //   }
+    // });
+        // create a new React root for the popup content
+        const root = createRoot(contentRef.current);
+        //ReactDOM.render(
+        root.render(
+          <div style={{ fontFamily: "system-ui", fontSize: 14, lineHeight: 1.2 }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>{p.station} ({p.river})</div>
+          <div><b>Warning:</b> {p.warning_level ?? "-"} m</div>
+          <div><b>Danger:</b> {p.danger_level ?? "-"} m</div>
+          <div><b>HFL:</b> {p.hfl_m ?? "-"} m</div>
+          <div><b>Water @ {p.time_label}:</b> {p.water_level_m ?? "-"} m</div>
+          <div><b>Trend:</b> {p.trend ?? "-"}</div>
+          <div style={{ marginTop: 4, color: "#666" }}>{p.district || ""}</div>
 
+        {/* Hydrograph component here */}
+        <HydroGraph station={p.station} />
+      </div>,
+      //contentRef.current
+    );
+
+    overlay.setPosition(coord);
+  }
+});
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------
     return () => map.setTarget(undefined);
   }, [vectorLayer]);
 
@@ -119,14 +150,14 @@ export default function WaterLevelMap() {
 
   return (
     <div style={{ display: "grid", gridTemplateRows: "auto 1fr", height: "100vh" }}>
-      <div style={{ padding: 8, display: "flex", gap: 8, alignItems: "center", fontFamily: "system-ui" }}>
+      <div style={{ padding: 8, display: "flex", gap: 8, alignItems: "center", fontFamily: "system-ui",fontSize: "1.2rem" }}>
         <label>
           Date:
-          <input type="date" value={dateISO} onChange={(e) => setDateISO(e.target.value)} />
+          <input type="date" value={dateISO} onChange={(e) => setDateISO(e.target.value)} style={{ fontSize: "1.1rem", padding: "3px 6px" }}/>
         </label>
         <label>
           Session:
-          <select value={session} onChange={(e) => setSession(e.target.value)}>
+          <select value={session} onChange={(e) => setSession(e.target.value)} style={{ fontSize: "1.1rem", padding: "3px 6px" }}>
             <option>Morning</option>
             <option>Evening</option>
           </select>
@@ -135,10 +166,12 @@ export default function WaterLevelMap() {
 
       <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
 
-      <div ref={containerRef} className="ol-popup" style={{ position: "absolute", background: "white", padding: 8, borderRadius: 8, boxShadow: "0 6px 24px rgba(0,0,0,0.2)", border: "1px solid #ddd", bottom: 12, left: 12, minWidth: 220 }}>
+      <div ref={containerRef} className="ol-popup" style={{ position: "absolute", background: "white", padding: 8, borderRadius: 8, boxShadow: "0 6px 24px rgba(0,0,0,0.2)", border: "1px solid #ddd", bottom: 12, left: 12, minWidth: 520 }}>
         <a ref={closerRef} href="#" style={{ position: "absolute", top: 4, right: 6, textDecoration: "none" }}>✕</a>
         <div ref={contentRef}></div>
       </div>
     </div>
   );
 }
+
+
