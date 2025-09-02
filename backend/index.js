@@ -118,3 +118,52 @@ const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
 });
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+app.get("/api/hydrograph", async (req, res) => {
+  const { station } = req.query;
+  if (!station) return res.status(400).json({ error: 'station is required' });
+
+  try {
+    const q = `
+      SELECT 
+        unique_id, source_file,
+        warning_level_m, danger_level_m, hfl_m,
+        water_level_0800hrs_m, water_level_1800hrs_m
+      FROM river_levels_bulletin
+      WHERE station = $1
+      ORDER BY forecast_date ASC, forecast_time ASC;
+    `;
+    const { rows } = await pool.query(q, [station]);
+
+    // Transform rows into time-series points
+    let data = [];
+    rows.forEach(r => {
+      if (r.water_level_0800hrs_m !== null) {
+        data.push({
+          datetime: `${r.forecast_date} 08:00`,
+          level: parseFloat(r.water_level_0800hrs_m),
+          warning: parseFloat(r.warning_level_m),
+          danger: parseFloat(r.danger_level_m),
+          hfl: parseFloat(r.hfl_m)
+        });
+      }
+      if (r.water_level_1800hrs_m !== null) {
+        data.push({
+          datetime: `${r.forecast_date} 18:00`,
+          level: parseFloat(r.water_level_1800hrs_m),
+          warning: parseFloat(r.warning_level_m),
+          danger: parseFloat(r.danger_level_m),
+          hfl: parseFloat(r.hfl_m)
+        });
+      }
+    });
+
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'internal error' });
+  }
+});
+
+app.listen(5000, () => console.log('API running on http://localhost:5000'));
